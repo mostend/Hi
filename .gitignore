@@ -13,3 +13,9 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+app
+Hi.app
+
+.DS_Store
+
+build.sh
