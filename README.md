@@ -1,2 +1,2 @@
 # Hi
-A base gui tool for xray and hysteria without system proxy 
+A base gui tool for xray/v2ray/hysteria/trojan-go without system proxy 
