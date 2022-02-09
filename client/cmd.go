@@ -12,7 +12,7 @@ func (a *App) Start() {
 		Buffered:  false,
 		Streaming: true,
 	}
-	a.Cmd = cmd.NewCmdOptions(cmdOptions, a.CorePath, "-c", a.ConfPath)
+	a.Cmd = cmd.NewCmdOptions(cmdOptions, a.Core, "-c", a.Conf)
 
 	//doneChan := make(chan struct{})
 	//go func() {

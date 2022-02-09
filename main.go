@@ -3,7 +3,6 @@ package main
 import (
 	"Hi/client"
 	_ "embed"
-
 	"fmt"
 
 	"github.com/getlantern/systray"
@@ -19,7 +18,7 @@ func onReady() {
 	systray.SetIcon(ic)
 	systray.SetTitle("Hi")
 	systray.SetTooltip("Hi")
-	mXray := systray.AddMenuItem("主程序", "重新选择主程序")
+	mCore := systray.AddMenuItem("主程序", "重新选择主程序")
 	mConf := systray.AddMenuItem("配置", "重新选择配置文件")
 	mQuit := systray.AddMenuItem("退出", "退出")
 	//这里启动web server
@@ -28,27 +27,27 @@ func onReady() {
 	}()
 
 	go func() {
-		client.AppCmd.CheckCorePath()
-		client.AppCmd.CheckConfPath()
+		client.AppCmd.CheckPath()
 		client.AppCmd.Start()
 	}()
+
 	go func() {
 		for {
 			select {
 			case <-mQuit.ClickedCh:
 				go func() {
 					client.AppCmd.Stop()
+					client.AppCmd.DbClose()
 				}()
 				systray.Quit()
 				fmt.Println("Requesting quit")
 				fmt.Println("Finished quitting")
 				return
 
-			case <-mXray.ClickedCh:
+			case <-mCore.ClickedCh:
 				go func() {
-					client.AppCmd.Stop()
-					client.AppCmd.ReCorePath()
-					client.AppCmd.Start()
+					client.AppCmd.ReCore()
+					client.AppCmd.ReStart()
 				}()
 			case <-mConf.ClickedCh:
 				//go func() {
@@ -56,9 +55,8 @@ func onReady() {
 				//	x.OpenBrowser(x.Browser())
 				//}()
 				go func() {
-					client.AppCmd.Stop()
-					client.AppCmd.ReConfPath()
-					client.AppCmd.Start()
+					client.AppCmd.ReConf()
+					client.AppCmd.ReStart()
 				}()
 			}
 		}
@@ -67,5 +65,6 @@ func onReady() {
 
 func onExit() {
 	client.AppCmd.Stop()
+	client.AppCmd.DbClose()
 	fmt.Println("exiting ...")
 }

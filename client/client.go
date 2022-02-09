@@ -2,94 +2,102 @@ package client
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/gen2brain/dlgs"
+
+	"github.com/xujiajun/nutsdb"
+
 	"github.com/go-cmd/cmd"
 )
 
 type App struct {
-	Ctx      context.Context `json:"-"`
-	Cmd      *cmd.Cmd        `json:"-"`
-	CorePath string          `json:"CorePath"`
-	ConfPath string          `json:"ConfPath"`
+	Ctx  context.Context
+	Cmd  *cmd.Cmd
+	Db   *nutsdb.DB
+	Core string
+	Conf string
 }
 
 var AppCmd = NewApp(context.Background())
 
-func NewApp(ctx context.Context) (a App) {
-	a = App{
+func NewApp(ctx context.Context) (a *App) {
+	a = &App{
 		Ctx: ctx,
 	}
-	CreateConfPath()
 	userHomeDir, _ := os.UserHomeDir()
-
-	if _, err := os.Stat(userHomeDir + AppConf); os.IsNotExist(err) {
-
-		file, err := os.OpenFile(userHomeDir+AppConf, os.O_CREATE|os.O_WRONLY, 0777)
-		defer file.Close()
-
-		if err != nil {
-			fmt.Println(err)
-			dlgs.Error("Error", "打开app.json文件失败")
-		}
-		defaultAppConfig, _ := json.Marshal(a)
-		file.Write(defaultAppConfig)
-		return a
-	}
-	b, err := os.ReadFile(userHomeDir + AppConf)
+	dbPath := userHomeDir + AppConf
+	opt := nutsdb.DefaultOptions
+	opt.Dir = dbPath
+	db, err := nutsdb.Open(opt)
 	if err != nil {
-		dlgs.Error("Error", "读取app.json失败")
+		log.Fatal(err)
 	}
-	a = App{}
-	err = json.Unmarshal(b, &a)
-	if err != nil {
-		dlgs.Error("Error", "读取app.json失败")
-	}
+	a.Db = db
 	return a
 }
 
-func (a *App) CheckCorePath() {
-	if a.CorePath == "" {
-		corePath, _, _ := dlgs.File("Core path", "", false)
-		a.CorePath = corePath
+func (a *App) CheckPath() {
+	if err := a.Db.Update(
+		func(tx *nutsdb.Tx) error {
+			coreKey := []byte(Core)
+			confKey := []byte(Conf)
+			bucket := BucketOfPath
+			if e, err := tx.Get(bucket, coreKey); err != nil {
+				corePath, _, _ := dlgs.File("Core path", "", false)
+				a.Core = corePath
+				tx.Put(bucket, coreKey, []byte(a.Core), 0)
+			} else {
+				a.Core = string(e.Value)
+			}
+			if e, err := tx.Get(bucket, confKey); err != nil {
+				confPath, _, _ := dlgs.File("Config path", "", false)
+				a.Conf = confPath
+				tx.Put(bucket, confKey, []byte(a.Conf), 0)
+			} else {
+				a.Conf = string(e.Value)
+			}
+			return nil
+		}); err != nil {
+		dlgs.Error("Error", "读取配置失败")
 	}
-	a.SaveConf()
-}
-func (a *App) CheckConfPath() {
-	if a.ConfPath == "" {
-		confPath, _, _ := dlgs.File("config path", "", false)
-		a.ConfPath = confPath
-	}
-	a.SaveConf()
 }
 
-func (a *App) ReCorePath() {
+func (a *App) ReCore() {
 	corePath, ok, _ := dlgs.File("Core path", "", false)
 	if ok {
-		a.CorePath = corePath
+		a.Core = corePath
 		a.SaveConf()
 	}
 }
 
-func (a *App) ReConfPath() {
+func (a *App) ReConf() {
 	confPath, ok, _ := dlgs.File("config path", "", false)
 	if ok {
-		a.ConfPath = confPath
+		a.Conf = confPath
 		a.SaveConf()
 	}
 }
 
 func (a *App) SaveConf() {
-	homeDir, _ := os.UserHomeDir()
-	appFile := homeDir + AppConf
-	file, err := os.OpenFile(appFile, os.O_CREATE|os.O_WRONLY, 0777)
-	defer file.Close()
-	if err != nil {
-		dlgs.Error("Error", "读取app.json失败")
+	if err := a.Db.Update(
+		func(tx *nutsdb.Tx) error {
+			coreKey := []byte(Core)
+			confKey := []byte(Conf)
+			bucket := BucketOfPath
+			if err := tx.Put(bucket, coreKey, []byte(a.Core), 0); err != nil {
+				return err
+			}
+			if err := tx.Put(bucket, confKey, []byte(a.Conf), 0); err != nil {
+				return err
+			}
+			return nil
+		}); err != nil {
+		dlgs.Error("Error", err.Error())
 	}
-	newAppConf, _ := json.Marshal(a)
-	file.Write(newAppConf)
+}
+
+func (a *App) DbClose() {
+	a.Db.Close()
 }
