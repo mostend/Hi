@@ -7,5 +7,6 @@ Support windows and macOS
 go env
   - MacOS 
     - chmod +x build.sh
+    - ./build.sh
   - Windows 
     - go build  -ldflags="-s -w -H windowsgui"
