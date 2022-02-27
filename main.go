@@ -20,12 +20,9 @@ func onReady() {
 	systray.SetTooltip("Hi")
 	mCore := systray.AddMenuItem("主程序", "重新选择主程序")
 	mConf := systray.AddMenuItem("配置", "重新选择配置文件")
+	mReStart := systray.AddMenuItem("重启", "重启")
 	mQuit := systray.AddMenuItem("退出", "退出")
-	//这里启动web server
-	go func() {
-		//router.Run()
-	}()
-
+	
 	go func() {
 		client.AppCmd.CheckPath()
 		client.AppCmd.Start()
@@ -50,15 +47,16 @@ func onReady() {
 					client.AppCmd.ReStart()
 				}()
 			case <-mConf.ClickedCh:
-				//go func() {
-				//	//打开web
-				//	x.OpenBrowser(x.Browser())
-				//}()
 				go func() {
 					client.AppCmd.ReConf()
 					client.AppCmd.ReStart()
 				}()
+			case <-mReStart.ClickedCh:
+				go func() {
+					client.AppCmd.ReStart()
+				}()
 			}
+
 		}
 	}()
 }
