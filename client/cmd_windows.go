@@ -4,9 +4,13 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 	"syscall"
 
 	"github.com/go-cmd/cmd"
@@ -25,7 +29,29 @@ func (a *App) Start() {
 			},
 		},
 	}
-	a.Cmd = cmd.NewCmdOptions(cmdOptions, a.Core, "-config", a.Conf)
+
+	if strings.Contains(a.Core, "brook") {
+		var brook Brook
+		b, err := os.ReadFile(a.Conf)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		_ = json.Unmarshal(b, &brook)
+		a.Cmd = cmd.NewCmdOptions(cmdOptions, a.Core,
+			brook.Server,
+			brook.ServerType,
+			brook.Addr,
+			`--password`,
+			brook.Password,
+			`--http`,
+			brook.Http,
+			`--socks5`,
+			brook.Socks5,
+			brook.NoBrook,
+		)
+	} else {
+		a.Cmd = cmd.NewCmdOptions(cmdOptions, a.Core, "-config", a.Conf)
+	}
 
 	//doneChan := make(chan struct{})
 	//go func() {
