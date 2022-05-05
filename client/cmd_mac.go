@@ -5,6 +5,7 @@ package client
 
 import (
 	"fmt"
+
 	"github.com/go-cmd/cmd"
 )
 
@@ -15,7 +16,7 @@ func (a *App) Start() {
 		Streaming: true,
 	}
 
-	a.Cmd = cmd.NewCmdOptions(cmdOptions, a.Core, "-config", a.Conf)
+	a.Cmd = cmd.NewCmdOptions(cmdOptions, a.Core, "-c", a.Conf)
 
 	//doneChan := make(chan struct{})
 	//go func() {
