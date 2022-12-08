@@ -25,7 +25,7 @@ func (a *App) Start() {
 			},
 		},
 	}
-	a.Cmd = cmd.NewCmdOptions(cmdOptions, a.Core, "-c", a.Conf)
+	a.Cmd = cmd.NewCmdOptions(cmdOptions, a.Core, a.GetRunCmd()...)
 
 	//doneChan := make(chan struct{})
 	//go func() {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/gen2brain/dlgs"
 
@@ -96,6 +97,14 @@ func (a *App) SaveConf() {
 		}); err != nil {
 		dlgs.Error("Error", err.Error())
 	}
+}
+
+func (a *App) GetRunCmd() []string {
+
+	if strings.Contains(a.Core, "sing-box") {
+		return []string{"run", "-c", a.Conf}
+	}
+	return []string{"-c", a.Conf}
 }
 
 func (a *App) DbClose() {
