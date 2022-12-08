@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/gen2brain/dlgs"
@@ -102,7 +103,7 @@ func (a *App) SaveConf() {
 func (a *App) GetRunCmd() []string {
 
 	if strings.Contains(a.Core, "sing-box") {
-		return []string{"run", "-c", a.Conf}
+		return []string{"run", "-c", a.Conf, "--directory", filepath.Dir(a.Core)}
 	}
 	return []string{"-c", a.Conf}
 }
