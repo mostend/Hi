@@ -1,6 +1,6 @@
 # Hi
 A base gui tool without system proxy.
-(v2ray,xray,trajon,verysimple,sing-box)
+(v2ray,xray,trojan,verysimple,sing-box)
 
 It's only no cmd!
 
