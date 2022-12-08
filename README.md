@@ -1,5 +1,9 @@
 # Hi
-A base gui tool for xray/v2ray/hysteria/verysimple without system proxy 
+A base gui tool without system proxy.
+(v2ray,xray,trajon,verysimple,sing-box)
+
+It's only no cmd!
+
 
 Support windows and macOS
 
