@@ -22,7 +22,7 @@ func onReady() {
 	mConf := systray.AddMenuItem("配置", "重新选择配置文件")
 	mReStart := systray.AddMenuItem("重启", "重启")
 	mQuit := systray.AddMenuItem("退出", "退出")
-	
+
 	go func() {
 		client.AppCmd.CheckPath()
 		client.AppCmd.Start()
