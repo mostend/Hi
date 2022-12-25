@@ -15,11 +15,14 @@ import (
 )
 
 type App struct {
-	Ctx  context.Context
-	Cmd  *cmd.Cmd
-	Db   *nutsdb.DB
-	Core string
-	Conf string
+	Ctx           context.Context
+	Cmd           *cmd.Cmd
+	Db            *nutsdb.DB
+	Core          string
+	Conf          string
+	ShadowTlsCmd  *cmd.Cmd
+	ShadowTlsCore string
+	ShadowTlsConf string
 }
 
 var AppCmd = NewApp(context.Background())
@@ -45,7 +48,10 @@ func (a *App) CheckPath() {
 		func(tx *nutsdb.Tx) error {
 			coreKey := []byte(Core)
 			confKey := []byte(Conf)
+			shadowTlsCore := []byte(ShadowTlsCore)
+			shadowTlsConf := []byte(ShadowTlsConf)
 			bucket := BucketOfPath
+
 			if e, err := tx.Get(bucket, coreKey); err != nil {
 				corePath, _, _ := dlgs.File("Core path", "", false)
 				a.Core = corePath
@@ -60,7 +66,23 @@ func (a *App) CheckPath() {
 			} else {
 				a.Conf = string(e.Value)
 			}
+			if e, err := tx.Get(bucket, shadowTlsCore); err != nil {
+				corePath, _, _ := dlgs.File("shadowTls Core path", "", false)
+				a.ShadowTlsCore = corePath
+				tx.Put(bucket, shadowTlsCore, []byte(a.ShadowTlsCore), 0)
+			} else {
+				a.ShadowTlsCore = string(e.Value)
+			}
+			if e, err := tx.Get(bucket, shadowTlsConf); err != nil {
+				corePath, _, _ := dlgs.File("shadowTls Config path", "", false)
+				a.ShadowTlsConf = corePath
+				tx.Put(bucket, shadowTlsConf, []byte(a.ShadowTlsConf), 0)
+			} else {
+				a.ShadowTlsConf = string(e.Value)
+			}
+
 			return nil
+
 		}); err != nil {
 		dlgs.Error("Error", "读取配置失败")
 	}
@@ -82,16 +104,40 @@ func (a *App) ReConf() {
 	}
 }
 
+func (a *App) ReShadowTlsCore() {
+	corePath, ok, _ := dlgs.File("ShadowTls Core path", "", false)
+	if ok {
+		a.ShadowTlsCore = corePath
+		a.SaveConf()
+	}
+}
+
+func (a *App) ReShadowTlsConf() {
+	confPath, ok, _ := dlgs.File("ShadowTls Config path", "", false)
+	if ok {
+		a.ShadowTlsConf = confPath
+		a.SaveConf()
+	}
+}
+
 func (a *App) SaveConf() {
 	if err := a.Db.Update(
 		func(tx *nutsdb.Tx) error {
 			coreKey := []byte(Core)
 			confKey := []byte(Conf)
+			shadowTlsCore := []byte(ShadowTlsCore)
+			shadowTlsConf := []byte(ShadowTlsConf)
 			bucket := BucketOfPath
 			if err := tx.Put(bucket, coreKey, []byte(a.Core), 0); err != nil {
 				return err
 			}
 			if err := tx.Put(bucket, confKey, []byte(a.Conf), 0); err != nil {
+				return err
+			}
+			if err := tx.Put(bucket, shadowTlsCore, []byte(a.ShadowTlsCore), 0); err != nil {
+				return err
+			}
+			if err := tx.Put(bucket, shadowTlsConf, []byte(a.ShadowTlsConf), 0); err != nil {
 				return err
 			}
 			return nil
